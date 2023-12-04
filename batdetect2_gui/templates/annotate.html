@@ -10,7 +10,13 @@
     <!--<img src='/static/hz_scale_150_right.png' />-->
   </div>
   <div class="spec_well">
-    <img id="spec_im" src="data:image/jpeg;base64,{{im_data}}" alt="{{annotation.id}}" />
+    <div id="spec_im" style="width: {{ file_params.spec_width }}px">
+        <div id="specgroup" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;width: {{ file_params.spec_width }}px">
+          {% for item in im_data %}
+          <img src="data:image/jpeg;base64,{{item}}" alt="{{annotation.id}}" />
+          {% endfor %}
+        </div>
+    </div>
 
     <div class="progress" id="progress">
       <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>

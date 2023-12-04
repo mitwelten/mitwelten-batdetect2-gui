@@ -65,11 +65,26 @@ def compute_image_data(audio_raw, sampling_rate, spec_params):
     cmap = plt.get_cmap("inferno")
     spec = (cmap(spec_raw)[:, :, :3] * 255).astype(np.uint8)
 
+    n_segments = 4
+    segment_width = spec.shape[1] // n_segments
+
+    # split spec into multiple parts along the x axis
+    spec_parts = []
+    for i in range(n_segments):
+        start = i * segment_width
+        # For the last segment, take all remaining columns
+        # to handle non-divisible cases
+        end = None if i == n_segments - 1 else start + segment_width
+        segment = spec[:, start:end, :]
+        spec_parts.append(segment)
+
     # create output image
-    im = Image.fromarray(spec)
-    im_file = BytesIO()
-    im.save(im_file, "JPEG", quality=90)
-    im_data = base64.b64encode(im_file.getvalue()).decode("utf-8")
-    im_file.close()
+    im_data = []
+    for i, spec_part in enumerate(spec_parts):
+        im = Image.fromarray(spec_part)
+        im_file = BytesIO()
+        im.save(im_file, "JPEG", quality=90)
+        im_data.append(base64.b64encode(im_file.getvalue()).decode("utf-8"))
+        im_file.close()
 
     return im_data, spec.shape
