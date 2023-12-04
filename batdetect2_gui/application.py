@@ -674,6 +674,7 @@ def create_dataset(audio_dir, annotation_dir):
     :param annotation_dir (string):
     :return: dataset ID
     """
+    print("creating dataset for " + audio_dir)
 
     for dd in datasets:
         if audio_dir == datasets[dd]["audio_dir"]:
@@ -681,13 +682,38 @@ def create_dataset(audio_dir, annotation_dir):
             # TODO might want to have option to reload a dataset
             return datasets[dd]["id"]
 
-    # load the paths - exit if no audio files
-    audio_files = list(Path(audio_dir).rglob("*.wav")) + list(
-        Path(audio_dir).rglob("*.WAV")
-    )
-    audio_files = [os.path.join(aa.parent, aa.name) for aa in audio_files]
-    if len(audio_files) == 0:
-        return "none"
+    # if the local directory doesn't exist, we're loading from database
+    if not os.path.isdir(audio_dir):
+        # fetch list of objects from database
+        db = pg.connect(host=crd.db.host, port=crd.db.port, database=crd.db.database, user=crd.db.user, password=crd.db.password)
+        c = db.cursor()
+        c.execute(f'''
+        select object_name, count(*) as cnt
+        from prod.files_audio f
+        left join prod.batnet_results r on r.file_id = f.file_id
+        where f.deployment_id = 1771 and class_prob > 0.5
+        group by object_name
+        order by cnt desc
+        limit 20;
+        ''')
+        # c.execute(f'''
+        # select object_name from prod.files_audio
+        # where deployment_id = 1771
+        # and time BETWEEN '2023-06-23' and '2023-06-27'
+        # limit 2
+        # ''')
+        audio_files = [audio_dir+f[0] for f in c.fetchall()]
+        c.close()
+        db.close()
+    
+    else:
+        # load the paths - exit if no audio files
+        audio_files = list(Path(audio_dir).rglob("*.wav")) + list(
+            Path(audio_dir).rglob("*.WAV")
+        )
+        audio_files = [os.path.join(aa.parent, aa.name) for aa in audio_files]
+        if len(audio_files) == 0:
+            return "none"
 
     # create paths for annotation files
     ann_file_paths = [
