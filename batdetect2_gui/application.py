@@ -10,6 +10,9 @@ import time
 import uuid
 from pathlib import Path
 from threading import Thread
+import psycopg2 as pg
+
+import credentials as crd
 
 from flask import (
     Flask,
@@ -723,6 +726,8 @@ def create_dataset(audio_dir, annotation_dir):
     event_names = []
     annotations = {}
 
+    db = pg.connect(host=crd.db.host, port=crd.db.port, database=crd.db.database, user=crd.db.user, password=crd.db.password)
+    c = db.cursor()
     # load or create annotations
     for ann_path in ann_file_paths:
         ann_path_short = ann_path[len(annotation_dir) :]
@@ -745,11 +750,24 @@ def create_dataset(audio_dir, annotation_dir):
         else:
             # create new annotation
             data = create_blank_annotation_file(ann_path_short)
+            # try to load annotations from database
+            print("loading from database:", ann_path_short[:-5])
+            c.execute(f'''
+            select object_name, r.class, r.event, r.individual, r.start_time, r.end_time, r.low_freq, r.high_freq
+            from prod.files_audio f
+            left join prod.batnet_results r on r.file_id = f.file_id
+            where f.object_name = %s and class_prob > 0.5
+            order by start_time asc
+            ''', (ann_path_short[:-5],))
+            db_annotations = c.fetchall()
+            data["annotation"] = [format_db_annotation(da) for da in db_annotations]
 
         # store the loaded annotation
         # TODO would be much better to use a hash of file_name as the key i.e. ['hash_id']
         annotations[data["file_name"]] = data
 
+    c.close()
+    db.close()
     # create new dataset
     dataset = {}
     dataset["id"] = hash_str(audio_dir)
@@ -771,6 +789,31 @@ def create_dataset(audio_dir, annotation_dir):
 
     return dataset["id"]
 
+def format_db_annotation(db_annotation):
+    '''
+    incoming db_annotation is a tuple of the form:
+    (object_name, class, event, individual, start_time, end_time, low_freq, high_freq)
+
+    outgoing annotation is a dict of the form:
+    {
+      "class": "Myotis mystacinus",
+      "end_time": 0.151696,
+      "event": "Echolocation",
+      "high_freq": 105957.03125,
+      "individual": "0",
+      "low_freq": 28564.453125,
+      "start_time": 0.146366
+    },    
+    '''
+    annotation = {}
+    annotation['class'] = db_annotation[1]
+    annotation['event'] = db_annotation[2]
+    annotation['individual'] = db_annotation[3]
+    annotation['start_time'] = db_annotation[4]
+    annotation['end_time'] = db_annotation[5]
+    annotation['low_freq'] = db_annotation[6]
+    annotation['high_freq'] = db_annotation[7]
+    return annotation
 
 def main():
     application.run(host="127.0.0.1", port=8000)
