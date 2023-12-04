@@ -20,8 +20,8 @@ from flask import (
     session,
 )
 
-from batdetect2_gui import config
-from batdetect2_gui import generate_data as gd
+import config
+import generate_data as gd
 
 application = Flask(__name__)
 application.secret_key = config.SECRET_KEY

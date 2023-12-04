@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 from PIL import Image
 
-from batdetect2_gui import wavfile
+import wavfile
 
 
 def generate_spectrogram(audio, sampling_rate, params):

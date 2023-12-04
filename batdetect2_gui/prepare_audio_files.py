@@ -13,8 +13,8 @@ from pathlib import Path
 
 import numpy as np
 
-from batdetect2_gui import audio_utils as au
-from batdetect2_gui import wavfile
+import audio_utils as au
+import wavfile
 
 
 def parse_args():
