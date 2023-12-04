@@ -1,10 +1,19 @@
 import warnings
+import io
 
 import numpy as np
 from PIL import Image
 
 import wavfile
+from minio import Minio
 
+import credentials as crd
+
+s3 = Minio(
+    crd.minio.host,
+    access_key=crd.minio.access_key,
+    secret_key=crd.minio.secret_key,
+)
 
 def generate_spectrogram(audio, sampling_rate, params):
     """Creates an spectrogram image
@@ -69,7 +78,9 @@ def load_audio_file(audio_file, time_exp_fact):
     """
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=wavfile.WavFileWarning)
-        sampling_rate, audio_raw = wavfile.read(audio_file)
+        response = s3.get_object(crd.minio.bucket, audio_file)
+        bytes_buffer = io.BytesIO(response.read())
+        sampling_rate, audio_raw = wavfile.read(bytes_buffer)
     assert len(audio_raw.shape) == 1  # throw error if there is a stereo file
     sampling_rate = sampling_rate * time_exp_fact
     return sampling_rate, audio_raw
