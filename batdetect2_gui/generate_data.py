@@ -21,9 +21,12 @@ def compute_audio_data(annotation, audio_dir, playback_time_expansion):
       - (float) file duration
     """
     # load wav
-    wav_file_path = os.path.join(
-        audio_dir, annotation["file_name"].replace(".json", "")
-    )
+    if not os.path.exists(audio_dir):
+        wav_file_path = annotation["file_name"].replace(".json", "")
+    else:
+        wav_file_path = os.path.join(
+            audio_dir, annotation["file_name"].replace(".json", "")
+        )
     sampling_rate, audio_raw = au.load_audio_file(
         wav_file_path, annotation["time_exp"]
     )
