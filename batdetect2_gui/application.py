@@ -231,7 +231,7 @@ def render_annotation_page():
     session.modified = True
 
     print("serving ", annotation["file_name"])
-    file_params, im_data, aud_data = get_data(annotation, use_cache=True)
+    file_params, im_data, aud_data = get_data(annotation, use_cache=False)
     next_file = dataset["file_names"][(cur_file + 1) % len(dataset["file_names"])]
     prev_file = dataset["file_names"][(cur_file - 1) % len(dataset["file_names"])]
 
