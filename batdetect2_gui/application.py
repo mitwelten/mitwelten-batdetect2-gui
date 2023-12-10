@@ -701,7 +701,7 @@ def create_dataset(audio_dir, annotation_dir):
         where f.deployment_id = 1771 and class_prob > 0.5
         group by object_name
         order by cnt desc
-        limit 100;
+        limit 40;
         ''')
         # c.execute(f'''
         # select object_name from prod.files_audio
