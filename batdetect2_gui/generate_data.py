@@ -68,9 +68,12 @@ def compute_image_data(audio_raw, sampling_rate, spec_params, reference):
     segment_width = spec.shape[1] // n_segments
     dims = (spec.shape[0], spec.shape[1])
 
-    os.makedirs("data", exist_ok=True)
+    if os.path.exists(f'data/{os.path.basename(reference)}_15.jpg'):
+        print("Spectrogram already generated.")
+        return [f'data/{os.path.basename(reference)}_{i}.jpg' for i in range(n_segments)], dims
 
     # split spec into multiple parts along the x axis
+    os.makedirs("data", exist_ok=True)
     im_paths = []
     for i in range(n_segments):
         start = i * segment_width
