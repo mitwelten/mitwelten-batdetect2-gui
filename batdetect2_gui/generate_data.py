@@ -8,9 +8,9 @@ from PIL import Image
 
 import audio_utils as au
 import wavfile
-import tempfile
+from memory_profiler import profile
 
-
+@profile
 def compute_audio_data(annotation, audio_dir, playback_time_expansion):
     """returns the metadata, raw audio samples and base64 encoded wav file
 
@@ -49,8 +49,8 @@ def compute_audio_data(annotation, audio_dir, playback_time_expansion):
 
     return sampling_rate, audio_raw, aud_data, duration
 
-
-def compute_image_data(audio_raw, sampling_rate, spec_params):
+@profile
+def compute_image_data(audio_raw, sampling_rate, spec_params, reference):
     """computes and saves spectrogram images to files
 
     :param audio_raw (array): audio samples
@@ -65,9 +65,11 @@ def compute_image_data(audio_raw, sampling_rate, spec_params):
     spec_raw /= spec_raw.max()
     cmap = plt.get_cmap("inferno")
     spec = (cmap(spec_raw)[:, :, :3] * 255).astype(np.uint8)
-
+    del spec_raw
+    
     n_segments = 8
     segment_width = spec.shape[1] // n_segments
+    dims = (spec.shape[0], spec.shape[1])
 
     # split spec into multiple parts along the x axis
     im_paths = []
@@ -80,11 +82,11 @@ def compute_image_data(audio_raw, sampling_rate, spec_params):
         im = Image.fromarray(segment)
 
         # Save the image to a temporary file
-        with tempfile.NamedTemporaryFile(suffix=".jpg", dir='data', delete=False) as temp_file:
-            temp_file_path = os.path.relpath(temp_file.name)
-            im.save(temp_file_path, "JPEG", quality=90)
+        filename = f'data/{os.path.basename(reference)}_{i}.jpg'
+        im.save(filename, "JPEG", quality=90)
 
         # Append the URL of the saved image file
-        im_paths.append(temp_file_path)
+        im_paths.append(filename)
 
-    return im_paths, spec.shape
+    del spec
+    return im_paths, dims
