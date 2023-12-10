@@ -764,6 +764,9 @@ def create_dataset(audio_dir, annotation_dir):
             ''', (ann_path_short[:-5],))
             db_annotations = c.fetchall()
             data["annotation"] = [format_db_annotation(da) for da in db_annotations]
+            for aa in data["annotation"]:
+                class_names.append(aa["class"])
+                event_names.append(aa["event"])
 
         # store the loaded annotation
         # TODO would be much better to use a hash of file_name as the key i.e. ['hash_id']
