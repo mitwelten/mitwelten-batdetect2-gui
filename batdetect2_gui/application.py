@@ -700,8 +700,7 @@ def create_dataset(audio_dir, annotation_dir):
         left join prod.batnet_results r on r.file_id = f.file_id
         where f.deployment_id = 1771 and class_prob > 0.5
         group by object_name
-        order by cnt desc
-        limit 3;
+        limit 30;
         ''')
         # c.execute(f'''
         # select object_name from prod.files_audio
