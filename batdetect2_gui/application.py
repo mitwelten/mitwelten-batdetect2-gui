@@ -16,6 +16,7 @@ import credentials as crd
 
 from flask import (
     Flask,
+    send_from_directory,
     copy_current_request_context,
     redirect,
     render_template,
@@ -86,6 +87,9 @@ def initialize_session(file_index=0):
 
     return "session cleared"
 
+@application.route('/data/<path:path>')
+def send_report(path):
+    return send_from_directory('data', path)
 
 @application.route("/clear_cache")
 def initialize_cache():
@@ -697,7 +701,7 @@ def create_dataset(audio_dir, annotation_dir):
         where f.deployment_id = 1771 and class_prob > 0.5
         group by object_name
         order by cnt desc
-        limit 20;
+        limit 3;
         ''')
         # c.execute(f'''
         # select object_name from prod.files_audio

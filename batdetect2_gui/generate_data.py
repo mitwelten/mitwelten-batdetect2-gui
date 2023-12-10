@@ -8,6 +8,7 @@ from PIL import Image
 
 import audio_utils as au
 import wavfile
+import tempfile
 
 
 def compute_audio_data(annotation, audio_dir, playback_time_expansion):
@@ -50,13 +51,13 @@ def compute_audio_data(annotation, audio_dir, playback_time_expansion):
 
 
 def compute_image_data(audio_raw, sampling_rate, spec_params):
-    """computes and returns a spectrogram image
+    """computes and saves spectrogram images to files
 
     :param audio_raw (array): audio samples
     :param sampling_rate (int):
     :return (tuple):
-      - (string) base64 spectrogram image
-      - (tuple?) height,width in pixels
+      - (list) paths to the saved spectrogram image files
+      - (tuple) height, width in pixels
     """
     # generate spectrogram
     spec_raw = au.generate_spectrogram(audio_raw, sampling_rate, spec_params)
@@ -69,7 +70,7 @@ def compute_image_data(audio_raw, sampling_rate, spec_params):
     segment_width = spec.shape[1] // n_segments
 
     # split spec into multiple parts along the x axis
-    im_data = []
+    im_paths = []
     for i in range(n_segments):
         start = i * segment_width
         # For the last segment, take all remaining columns
@@ -77,9 +78,13 @@ def compute_image_data(audio_raw, sampling_rate, spec_params):
         end = None if i == n_segments - 1 else start + segment_width
         segment = spec[:, start:end, :]
         im = Image.fromarray(segment)
-        im_file = BytesIO()
-        im.save(im_file, "JPEG", quality=90)
-        im_data.append(base64.b64encode(im_file.getvalue()).decode("utf-8"))
-        im_file.close()
 
-    return im_data, spec.shape
+        # Save the image to a temporary file
+        with tempfile.NamedTemporaryFile(suffix=".jpg", dir='data', delete=False) as temp_file:
+            temp_file_path = os.path.relpath(temp_file.name)
+            im.save(temp_file_path, "JPEG", quality=90)
+
+        # Append the URL of the saved image file
+        im_paths.append(temp_file_path)
+
+    return im_paths, spec.shape
