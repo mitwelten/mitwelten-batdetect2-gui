@@ -11,7 +11,7 @@
   </div>
   <div class="spec_well">
     <div id="spec_im" style="width: {{ file_params.spec_width }}px">
-        <div id="specgroup" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;width: {{ file_params.spec_width }}px">
+        <div id="specgroup" style="display: grid; grid-template-columns: repeat(16, 1fr); width: {{ file_params.spec_width }}px">
           {% for item in im_data %}
           <img src="/{{item}}" alt="{{annotation.id}}" />
           {% endfor %}
