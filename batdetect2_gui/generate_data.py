@@ -56,6 +56,13 @@ def compute_image_data(audio_raw, sampling_rate, spec_params, reference):
       - (list) paths to the saved spectrogram image files
       - (tuple) height, width in pixels
     """
+    n_segments = 16
+    if os.path.exists(f'data/{os.path.basename(reference)}_dims'):
+        print("Spectrogram already generated.")
+        with open(f'data/{os.path.basename(reference)}_dims', 'r') as f:
+            dims = tuple(map(int, f.read().split()))
+        return [f'data/{os.path.basename(reference)}_{i}.jpg' for i in range(n_segments)], dims
+
     # generate spectrogram
     spec_raw = au.generate_spectrogram(audio_raw, sampling_rate, spec_params)
     spec_raw -= spec_raw.min()
@@ -64,16 +71,13 @@ def compute_image_data(audio_raw, sampling_rate, spec_params, reference):
     spec = (cmap(spec_raw)[:, :, :3] * 255).astype(np.uint8)
     del spec_raw
 
-    n_segments = 16
-    segment_width = spec.shape[1] // n_segments
     dims = (spec.shape[0], spec.shape[1])
-
-    if os.path.exists(f'data/{os.path.basename(reference)}_15.jpg'):
-        print("Spectrogram already generated.")
-        return [f'data/{os.path.basename(reference)}_{i}.jpg' for i in range(n_segments)], dims
+    with open(f'data/{os.path.basename(reference)}_dims', 'w') as f:
+        f.write(f'{dims[0]} {dims[1]}')
 
     # split spec into multiple parts along the x axis
     os.makedirs("data", exist_ok=True)
+    segment_width = spec.shape[1] // n_segments
     im_paths = []
     for i in range(n_segments):
         start = i * segment_width
