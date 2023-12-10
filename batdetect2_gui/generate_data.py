@@ -8,9 +8,7 @@ from PIL import Image
 
 import audio_utils as au
 import wavfile
-from memory_profiler import profile
 
-@profile
 def compute_audio_data(annotation, audio_dir, playback_time_expansion):
     """returns the metadata, raw audio samples and base64 encoded wav file
 
@@ -49,7 +47,6 @@ def compute_audio_data(annotation, audio_dir, playback_time_expansion):
 
     return sampling_rate, audio_raw, aud_data, duration
 
-@profile
 def compute_image_data(audio_raw, sampling_rate, spec_params, reference):
     """computes and saves spectrogram images to files
 
@@ -66,10 +63,12 @@ def compute_image_data(audio_raw, sampling_rate, spec_params, reference):
     cmap = plt.get_cmap("inferno")
     spec = (cmap(spec_raw)[:, :, :3] * 255).astype(np.uint8)
     del spec_raw
-    
-    n_segments = 8
+
+    n_segments = 16
     segment_width = spec.shape[1] // n_segments
     dims = (spec.shape[0], spec.shape[1])
+
+    os.makedirs("data", exist_ok=True)
 
     # split spec into multiple parts along the x axis
     im_paths = []
