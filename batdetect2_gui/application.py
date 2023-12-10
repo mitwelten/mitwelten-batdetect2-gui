@@ -761,7 +761,6 @@ def create_dataset(audio_dir, annotation_dir):
             from prod.files_audio f
             left join prod.batnet_results r on r.file_id = f.file_id
             where f.object_name = %s and class_prob > 0.5
-            order by start_time asc
             ''', (ann_path_short[:-5],))
             db_annotations = c.fetchall()
             data["annotation"] = [format_db_annotation(da) for da in db_annotations]
